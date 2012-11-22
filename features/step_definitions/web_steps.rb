@@ -240,6 +240,112 @@ Then /^the "([^"]*)" checkbox(?: within (.*))? should be checked$/ do |label, pa
   end
 end
 
+
+
+
+Given /^the blog for a non-administrator "(.*)" user is setup$/ do |nombre|
+  Blog.default.update_attributes!({:blog_name => nombre,
+                                   :base_url => 'http://localhost:3000'});
+  Blog.default.save!
+  User.create!({:login => nombre,
+                :password => nombre,
+                :email => nombre + '@typo.com',
+                :profile_id => 2,
+                :name => nombre,
+                :state => 'active'})
+end
+	
+Given /^the blog for an administrator "(.*)" user is setup$/ do |nombre|
+  Blog.default.update_attributes!({:blog_name => nombre,
+                                   :base_url => 'http://localhost:3000'});
+  Blog.default.save!
+  User.create!({:login => nombre,
+                :password => nombre,
+                :email => nombre + '@typo.com',
+                :profile_id => 2,
+                :name => nombre,
+                :state => 'active'})
+end
+	
+	
+	
+	
+	
+And /^an article "(.*)" owned by user "(.*)" exists$/ do |titulo, usuario|
+visit '/accounts/login'
+  fill_in 'user_login', :with => usuario
+  fill_in 'user_password', :with => usuario
+  click_button 'Login'  
+  visit '/admin/content/new'
+  fill_in 'article_title', :with => titulo
+  click_button 'Publish'
+  visit '/accounts/logout'
+end
+
+
+Given /^I am logged as "(.*)"$/ do |usuario|
+visit '/accounts/login'
+  fill_in 'user_login', :with => usuario
+  fill_in 'user_password', :with => usuario
+  click_button 'Login'
+  if page.respond_to? :should
+    page.should have_content('Login successful')
+  else
+    assert page.has_content?('Login successful')
+  end
+end
+
+
+When /^I edit "(.*)"$/ do |titulo|
+   visit '/admin/content/'  
+  all('tr').each do |tr|
+    if tr.has_content?(titulo) 
+         click_link 'Edit'
+      else
+		assert 'ERROR: No hay articulo'
+    end
+  end
+end
+
+Then /^I should not see an option to merge articles$/  do
+page.should have_no_content("Merge");
+visit '/accounts/logout'
+end
+
+Given /^I am logged as the administrator$/ do
+visit '/accounts/login'
+  fill_in 'user_login', :with => 'raul'
+  fill_in 'user_password', :with => 'saasbook'
+  click_button 'Login'
+  if page.respond_to? :should
+    page.should have_content('Login successful')
+  else
+    assert page.has_content?('Login successful')
+  end
+end
+
+And /^I edit an article named "(.*)" from user "(.*)"$/ do |titulo, autor|
+   visit '/admin/content/'  
+  all('tr').each do |tr|
+    if tr.has_content?(titulo) 
+         click_link 'Edit'
+      else
+		assert 'ERROR: No hay articulo'
+    end
+  end
+end
+
+Then /^I should see an option to merge articles$/  do
+page.should have_content("Merge");
+end
+
+
+
+
+
+
+
+
 Then /^the "([^"]*)" checkbox(?: within (.*))? should not be checked$/ do |label, parent|
   with_scope(parent) do
     field_checked = find_field(label)['checked']
